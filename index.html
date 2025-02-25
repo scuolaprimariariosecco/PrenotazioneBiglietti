@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <div class="info-box">
+        <h4><em>Musical "Pinocchio, burattino senza fili" - Scuola Primaria di Riosecco</em></h4>
+        <h1>Benvenuti nell'area riservata alla prenotazione dei biglietti</h1>
+        <p>Qui potrai prenotare i tuoi biglietti per lo spettacolo. Ti ricordiamo che potrai prenotare massimo
+        6 biglietti ad alunno. <br><b> In caso di necessità/modifiche alla tua prenotazione contattaci
+                alla mail veronica.zangarelli@ddsecondocircolo.edu.it. </b></br><br>
+            La prevendita è vincolante. Attendi l’email di conferma da parte della nostra organizzazione dove ti verrà indicato il giorno e l’orario per il ritiro dei biglietti
+            a scuola.
+
+        </p>
+    </div>
+
+    <title>Prenotazione Biglietti Teatro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-image: url('ciao.jpeg'); /* Aggiungi il percorso della tua immagine */
+            background-size: cover; /* L'immagine copre tutta la pagina */
+            background-position: center; /* Centra l'immagine */
+            background-repeat: no-repeat; /* Non ripetere l'immagine */
+            background-attachment: fixed; /* Mantiene l'immagine di sfondo fissa */
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.8); /* Aggiungi un po' di trasparenza per un contrasto migliore */
+        }
+
+        select, input, button {
+            margin: 10px 0;
+            padding: 8px;
+            width: 100%;
+        }
+
+        button:disabled {
+            background-color: gray;
+            cursor: not-allowed;
+        }
+
+        /* Stili per le tab */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .tabs button {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background-color: #f4f4f4;
+            margin-right: 5px;
+            border-radius: 5px;
+        }
+        .tabs button.active {
+            background-color: #ddd;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Tabella */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+    <!-- Includi la libreria SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+</head>
+<body>
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="changeTab(event, 'prenotazioniTab')">Prenotazioni</button>
+        <button class="tab-btn" onclick="changeTab(event, 'adminTab')">Amministratore</button>
+    </div>
+
+    <!-- Contenuti delle Tab -->
+    <div id="prenotazioniTab" class="tab-content active">
+        <div class="container">
+            <h2>Prenota i tuoi biglietti</h2>
+
+            <label for="classi">Seleziona la classe:</label>
+            <select id="classi" onchange="loadStudents()">
+                <option value="">--Seleziona la classe dell'alunno/a--</option>
+                <option value="classe1">Classe 1</option>
+                <option value="classe2">Classe 2</option>
+                <option value="classe3a">Classe 3A</option>
+                <option value="classe3b">Classe 3B</option>
+                <option value="classe4">Classe 4</option>
+                <option value="classe5">Classe 5</option>
+            </select>
+
+            <label for="studenti">Seleziona l'alunno/a:</label>
+            <select id="studenti" disabled onchange="enableBooking()">
+                <option value="">--Seleziona l'alunno/a--</option>
+            </select>
+
+            <div id="bookingSection" style="display: none;">
+                <label for="interi">Numero biglietti interi (12-99 anni) - Costo 15€:</label>
+                <input type="number" id="interi" min="0" max="6" value="0" onchange="calculateTotal()">
+
+                <label for="ridotti">Numero biglietti ridotti (3-11 anni) - Costo 8€:</label>
+                <input type="number" id="ridotti" min="0" max="6" value="0" onchange="calculateTotal()">
+
+                <label for="gratuiti">Numero biglietti gratuiti (0-2 anni) - Gratuito:</label>
+                <input type="number" id="gratuiti" min="0" max="6" value="0" onchange="calculateTotal()">
+
+                <h3>Totale: <span id="totale">0</span>€</h3>
+                <button id="prenotaBtn" onclick="acquista()" disabled>Prenota</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminTab" class="tab-content">
+        <div class="container" id="adminLogin">
+            <h2>Accesso Amministratore</h2>
+            <input type="password" id="password" placeholder="Inserisci la password">
+            <button onclick="checkPassword()">Accedi</button>
+        </div>
+
+        <div class="container" id="adminSection" style="display: none;">
+            <h2>Storico Prenotazioni</h2>
+            <table id="storicoTabella">
+                <thead>
+                    <tr>
+                        <th>Classe</th>
+                        <th>Studente</th>
+                        <th>Interi</th>
+                        <th>Ridotti</th>
+                        <th>Gratuiti</th>
+                        <th>Totale</th>
+                        <th>Data</th> <!-- Colonna Data -->
+                    </tr>
+                </thead>
+                <tbody id="prenotazioniLista"></tbody>
+            </table>
+            <button onclick="clearPrenotazioni()">Cancella Storico</button>
+            <button onclick="exportToExcel()">Esporta in Excel</button>
+        </div>
+    </div>
+
+    <script>
+        // Gestione delle Tab
+        function changeTab(event, tabId) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        const studentiPerClasse = {
+            classe1: ["Mario Rossi", "Luca Bianchi"],
+            classe2: ["Giulia Verdi", "Anna Neri"],
+            classe3a: ["Giulia Verdi", "Anna Neri"],
+            classe3b: ["Giulia Verdi", "Anna Neri"],
+            classe4: ["Giulia Verdi", "Anna Neri"],
+            classe5: ["Giulia Verdi", "Anna Neri"]
+        };
+
+        // Funzione per caricare gli studenti
+        function loadStudents() {
+            let classe = document.getElementById("classi").value;
+            let studentiSelect = document.getElementById("studenti");
+            studentiSelect.innerHTML = '<option value="">--Seleziona l\'alunno/a--</option>';
+
+            if (classe && studentiPerClasse[classe]) {
+                studentiPerClasse[classe].forEach(studente => {
+                    let option = document.createElement("option");
+                    option.value = studente;
+                    option.textContent = studente;
+                    studentiSelect.appendChild(option);
+                });
+                studentiSelect.disabled = false;
+            } else {
+                studentiSelect.disabled = true;
+            }
+        }
+
+        function enableBooking() {
+            document.getElementById("bookingSection").style.display = "block";
+            checkMaxTickets();
+        }
+
+        // Calcolare il totale dei biglietti selezionati
+        function calculateTotal() {
+            let interi = parseInt(document.getElementById("interi").value) || 0;
+            let ridotti = parseInt(document.getElementById("ridotti").value) || 0;
+            let gratuiti = parseInt(document.getElementById("gratuiti").value) || 0;
+
+            let totaleBiglietti = interi + ridotti + gratuiti;
+            let totale = (interi * 15) + (ridotti * 8);
+            document.getElementById("totale").textContent = totale;
+
+            checkMaxTickets();
+        }
+
+        // Funzione per acquistare i biglietti
+        function acquista() {
+            let classe = document.getElementById("classi").value;
+            let studente = document.getElementById("studenti").value;
+            let interi = document.getElementById("interi").value;
+            let ridotti = document.getElementById("ridotti").value;
+            let gratuiti = document.getElementById("gratuiti").value;
+            let totale = document.getElementById("totale").textContent;
+
+            // Ottieni la data corrente
+            let dataPrenotazione = new Date().toLocaleString();
+
+            let prenotazione = {
+                classe: classe,
+                studente: studente,
+                interi: interi,
+                ridotti: ridotti,
+                gratuiti: gratuiti,
+                totale: totale,
+                data: dataPrenotazione // Aggiungi la data
+            };
+
+            let prenotazioni = JSON.parse(localStorage.getItem("prenotazioni")) || [];
+            prenotazioni.push(prenotazione);
+            localStorage.setItem("prenotazioni", JSON.stringify(prenotazioni));
+
+            // Nascondi il totale e disabilita il tasto
+            document.getElementById("totale").style.display = 'none';
+            document.getElementById("prenotaBtn").disabled = true;
+
+            alert("Prenotazione salvata con successo!");
+            checkMaxTickets();  // Ricalcola il numero massimo di biglietti
+        }
+
+        // Funzione per verificare il numero massimo di biglietti
+        function checkMaxTickets() {
+            let prenotazioni = JSON.parse(localStorage.getItem("prenotazioni")) || [];
+            let classe = document.getElementById("classi").value;
+            let studente = document.getElementById("studenti").value;
+
+            let totalePrenotato = prenotazioni.reduce((acc, prenotazione) => {
+                if (prenotazione.classe === classe && prenotazione.studente === studente) {
+                    return acc + parseInt(prenotazione.interi) + parseInt(prenotazione.ridotti) + parseInt(prenotazione.gratuiti);
+                }
+                return acc;
+            }, 0);
+
+            let interi = parseInt(document.getElementById("interi").value) || 0;
+            let ridotti = parseInt(document.getElementById("ridotti").value) || 0;
+            let gratuiti = parseInt(document.getElementById("gratuiti").value) || 0;
+
+            let totale = totalePrenotato + interi + ridotti + gratuiti;
+
+            if (totale > 6) {
+                if (!document.getElementById("prenotaBtn").disabled) {
+                    alert("Il totale dei biglietti supera il limite massimo di 6.");
+                }
+                document.getElementById("prenotaBtn").disabled = true;
+            } else {
+                document.getElementById("prenotaBtn").disabled = false;
+            }
+        }
+
+
+        // Funzione di login per amministratore
+        function checkPassword() {
+            let password = document.getElementById("password").value;
+            if (password === "admin123") {
+                document.getElementById("adminSection").style.display = "block";
+                loadPrenotazioni();
+            } else {
+                alert("Password errata!");
+            }
+        }
+
+        // Funzione per caricare le prenotazioni
+        function loadPrenotazioni() {
+            let prenotazioni = JSON.parse(localStorage.getItem("prenotazioni")) || [];
+            let lista = document.getElementById("prenotazioniLista");
+            let tabella = document.getElementById("storicoTabella");
+            let tbody = document.getElementById("prenotazioniLista");
+
+            tbody.innerHTML = "";
+
+            prenotazioni.forEach(prenotazione => {
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${prenotazione.classe}</td>
+                    <td>${prenotazione.studente}</td>
+                    <td>${prenotazione.interi}</td>
+                    <td>${prenotazione.ridotti}</td>
+                    <td>${prenotazione.gratuiti}</td>
+                    <td>${prenotazione.totale}€</td>
+                    <td>${prenotazione.data}</td> <!-- Aggiungi la data -->
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Funzione per cancellare lo storico
+        function clearPrenotazioni() {
+            localStorage.removeItem("prenotazioni");
+            loadPrenotazioni();
+        }
+
+        // Funzione per esportare in Excel
+        function exportToExcel() {
+            let prenotazioni = JSON.parse(localStorage.getItem("prenotazioni")) || [];
+            let wb = XLSX.utils.book_new();
+            let ws = XLSX.utils.json_to_sheet(prenotazioni);
+            XLSX.utils.book_append_sheet(wb, ws, "Prenotazioni");
+            XLSX.writeFile(wb, "storico_prenotazioni.xlsx");
+        }
+    </script>
+</body>
+</html>

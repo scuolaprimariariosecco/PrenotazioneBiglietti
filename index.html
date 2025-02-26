@@ -92,14 +92,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
 </head>
 <body>
-    <!-- Tabs -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="changeTab(event, 'prenotazioniTab')">Prenotazioni</button>
-        <button class="tab-btn" onclick="changeTab(event, 'adminTab')">Amministratore</button>
-    </div>
-
-    <!-- Contenuti delle Tab -->
-    <div id="prenotazioniTab" class="tab-content active">
         <div class="container">
             <h2>Prenota i tuoi biglietti</h2>
 
@@ -132,34 +124,6 @@
                 <h3>Totale: <span id="totale">0</span>€</h3>
                 <button id="prenotaBtn" onclick="acquista()" disabled>Prenota</button>
             </div>
-        </div>
-    </div>
-
-    <div id="adminTab" class="tab-content">
-        <div class="container" id="adminLogin">
-            <h2>Accesso Amministratore</h2>
-            <input type="password" id="password" placeholder="Inserisci la password">
-            <button onclick="checkPassword()">Accedi</button>
-        </div>
-
-        <div class="container" id="adminSection" style="display: none;">
-            <h2>Storico Prenotazioni</h2>
-            <table id="storicoTabella">
-                <thead>
-                    <tr>
-                        <th>Classe</th>
-                        <th>Studente</th>
-                        <th>Interi</th>
-                        <th>Ridotti</th>
-                        <th>Gratuiti</th>
-                        <th>Totale</th>
-                        <th>Data</th> <!-- Colonna Data -->
-                    </tr>
-                </thead>
-                <tbody id="prenotazioniLista"></tbody>
-            </table>
-            <button onclick="clearPrenotazioni()">Cancella Storico</button>
-            <button onclick="exportToExcel()">Esporta in Excel</button>
         </div>
     </div>
 
@@ -232,38 +196,102 @@
         }
 
         // Funzione per acquistare i biglietti
-        function acquista() {
-            let classe = document.getElementById("classi").value;
-            let studente = document.getElementById("studenti").value;
-            let interi = document.getElementById("interi").value;
-            let ridotti = document.getElementById("ridotti").value;
-            let gratuiti = document.getElementById("gratuiti").value;
-            let totale = document.getElementById("totale").textContent;
+     function acquista() {
+        let classe = document.getElementById("classi").value;
+        let studente = document.getElementById("studenti").value;
+        let interi = parseInt(document.getElementById("interi").value) || 0;
+        let ridotti = parseInt(document.getElementById("ridotti").value) || 0;
+        let gratuiti = parseInt(document.getElementById("gratuiti").value) || 0;
+        let totale = interi + ridotti + gratuiti;
 
-            // Ottieni la data corrente
-            let dataPrenotazione = new Date().toLocaleString();
+        let key = classe + "_" + studente;
+        let prenotaBtn = document.getElementById("prenotaBtn");
 
-            let prenotazione = {
+        // Disabilita il pulsante e cambia il testo mentre si effettua la verifica
+        prenotaBtn.disabled = true;
+        prenotaBtn.innerText = "Verifica...";
+
+        // Richiesta per ottenere il numero di biglietti già prenotati
+        fetch("https://script.google.com/macros/s/AKfycbzGI2OTeuX8XcQB6R7ECgmG_7E8poiFzQGMvdAt8t7_cS_6mILKshV0AhB7GAdyWNFt/exec")
+          .then(response => response.json())
+          .then(data => {
+            // Logga l'intera risposta per vedere la struttura dei dati
+            //console.log("Dati ricevuti:", data);
+
+            // Estrai la riga che corrisponde alla classe e studente
+            let totalePrenotato = 0; // Inizializza il totale prenotato come 0
+
+            // Scorri i dati (dove data[1] contiene i dati effettivi)
+            for (let i = 1; i < data.length; i++) {
+              let row = data[i];
+
+              // Se la classe e lo studente corrispondono
+              if (row[0] === classe && row[1] === studente) {
+                // Trova il totale prenotato (che si trova alla colonna 5)
+                totalePrenotato = row[5];  // La colonna "Totale" è al 5° indice (0-based)
+                break; // Esci dal ciclo se trovata la corrispondenza
+              }
+            }
+
+            //console.log("Totale prenotato per la chiave:", totalePrenotato);
+
+            // Verifica se il numero totale di biglietti supera 6
+            if ((totalePrenotato + totale) > 6) {
+              // Se il limite è superato, mostra il messaggio di errore
+              console.log("Limite superato! Mostra l'alert.");
+              alert(`Il numero di biglietti supera il limite di 6! Hai già prenotato ${totalePrenotato} biglietti.`);
+
+              // Ripristina il pulsante
+              prenotaBtn.disabled = false;
+              prenotaBtn.innerText = "Prenota";  // Ripristina il testo
+            } else {
+              // Se il limite non è superato, invia la prenotazione
+              let prenotazione = {
                 classe: classe,
                 studente: studente,
                 interi: interi,
                 ridotti: ridotti,
                 gratuiti: gratuiti,
-                totale: totale,
-                data: dataPrenotazione // Aggiungi la data
-            };
+                totale: totale
+              };
 
-            let prenotazioni = JSON.parse(localStorage.getItem("prenotazioni")) || [];
-            prenotazioni.push(prenotazione);
-            localStorage.setItem("prenotazioni", JSON.stringify(prenotazioni));
+              // Invia la prenotazione tramite POST
+              fetch("https://script.google.com/macros/s/AKfycbzGI2OTeuX8XcQB6R7ECgmG_7E8poiFzQGMvdAt8t7_cS_6mILKshV0AhB7GAdyWNFt/exec", {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(prenotazione)
+              })
+              .then(() => {
+                // Mostra il messaggio di successo
+                alert("Prenotazione salvata con successo!");
 
-            // Nascondi il totale e disabilita il tasto
-            document.getElementById("totale").style.display = 'none';
-            document.getElementById("prenotaBtn").disabled = true;
+                // Ripristina il pulsante
+                prenotaBtn.disabled = false;
+                prenotaBtn.innerText = "Prenota";  // Ripristina il testo
+              })
+              .catch(error => {
+                // Gestione degli errori nel salvataggio
+                console.error("Errore nel salvataggio della prenotazione:", error);
 
-            alert("Prenotazione salvata con successo!");
-            checkMaxTickets();  // Ricalcola il numero massimo di biglietti
+                // Ripristina il pulsante anche in caso di errore
+                prenotaBtn.disabled = false;
+                prenotaBtn.innerText = "Prenota";  // Ripristina il testo
+              });
+            }
+          })
+          .catch(error => {
+            // Gestione degli errori nel recupero delle prenotazioni
+            console.error("Errore nel recupero delle prenotazioni:", error);
+
+            // Ripristina il pulsante anche in caso di errore
+            prenotaBtn.disabled = false;
+            prenotaBtn.innerText = "Prenota";  // Ripristina il testo
+          });
+
         }
+
+
 
         // Funzione per verificare il numero massimo di biglietti
         function checkMaxTickets() {
@@ -308,27 +336,29 @@
 
         // Funzione per caricare le prenotazioni
         function loadPrenotazioni() {
-            let prenotazioni = JSON.parse(localStorage.getItem("prenotazioni")) || [];
-            let lista = document.getElementById("prenotazioniLista");
-            let tabella = document.getElementById("storicoTabella");
-            let tbody = document.getElementById("prenotazioniLista");
+            fetch("https://script.google.com/macros/s/AKfycbzGI2OTeuX8XcQB6R7ECgmG_7E8poiFzQGMvdAt8t7_cS_6mILKshV0AhB7GAdyWNFt/exec")
+                .then(response => response.json())
+                .then(data => {
+                    let tbody = document.getElementById("prenotazioniLista");
+                    tbody.innerHTML = "";
 
-            tbody.innerHTML = "";
-
-            prenotazioni.forEach(prenotazione => {
-                let tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${prenotazione.classe}</td>
-                    <td>${prenotazione.studente}</td>
-                    <td>${prenotazione.interi}</td>
-                    <td>${prenotazione.ridotti}</td>
-                    <td>${prenotazione.gratuiti}</td>
-                    <td>${prenotazione.totale}€</td>
-                    <td>${prenotazione.data}</td> <!-- Aggiungi la data -->
-                `;
-                tbody.appendChild(tr);
-            });
+                    data.slice(1).forEach(row => {
+                        let tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${row[0]}</td>
+                            <td>${row[1]}</td>
+                            <td>${row[2]}</td>
+                            <td>${row[3]}</td>
+                            <td>${row[4]}</td>
+                            <td>${row[5]}€</td>
+                            <td>${row[6]}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => console.error("Errore:", error));
         }
+
 
         // Funzione per cancellare lo storico
         function clearPrenotazioni() {
@@ -345,5 +375,7 @@
             XLSX.writeFile(wb, "storico_prenotazioni.xlsx");
         }
     </script>
+
+
 </body>
 </html>

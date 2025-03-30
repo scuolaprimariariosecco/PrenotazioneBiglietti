@@ -227,7 +227,7 @@ function acquista() {
     prenotaBtn.innerText = "Verifica...";
 
     // Richiesta per ottenere i dati delle prenotazioni
-    fetch("https://script.google.com/macros/s/AKfycbykWmeiKQytRtD76guwFtFYTrW7bUWe_vWKIbivhRoMu_dwwnOGjAf8jWkHNB3LqaqPiw/exec")
+    fetch("https://script.google.com/macros/s/AKfycbzDQChudcLCZQ4se9DmDX3KBVtQOHpGRbTUGKtoDofQ8CssXZi7YO8OTvfuLeH4N7XY/exec")
       .then(response => response.json())
       .then(data_resp => {
 
@@ -237,7 +237,7 @@ function acquista() {
         let totaleSistema = 0;
 
         // Definisci i limiti in base alla data
-        let LIMITE_TOTALE = data === "17" ? 70 : 115; // 6 per il 17 maggio, 5 per il 18 maggio
+        let LIMITE_TOTALE = data === "17" ? 65 : 110; // 6 per il 17 maggio, 5 per il 18 maggio
 
         // Verifica se data_resp è un array e ha elementi
         if (Array.isArray(data_resp) && data_resp.length > 1) {
@@ -282,7 +282,7 @@ function acquista() {
             };
 
             // Invia la prenotazione tramite POST
-            fetch("https://script.google.com/macros/s/AKfycbykWmeiKQytRtD76guwFtFYTrW7bUWe_vWKIbivhRoMu_dwwnOGjAf8jWkHNB3LqaqPiw/exec", {
+            fetch("https://script.google.com/macros/s/AKfycbzDQChudcLCZQ4se9DmDX3KBVtQOHpGRbTUGKtoDofQ8CssXZi7YO8OTvfuLeH4N7XY/exec", {
                 method: "POST",
                 mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
@@ -321,7 +321,7 @@ function acquista() {
         // Funzione per verificare il numero massimo di biglietti
         function checkMaxTickets() {
             let data = document.getElementById("data").value;
-            let limiteMassimo = data === "17" ? 70 : 115;
+            let limiteMassimo = data === "17" ? 65 : 110;
 
             let interi = parseInt(document.getElementById("interi").value) || 0;
             let ridotti = parseInt(document.getElementById("ridotti").value) || 0;
@@ -356,7 +356,7 @@ function acquista() {
 
         // Funzione per caricare le prenotazioni
         function loadPrenotazioni() {
-            fetch("https://script.google.com/macros/s/AKfycbykWmeiKQytRtD76guwFtFYTrW7bUWe_vWKIbivhRoMu_dwwnOGjAf8jWkHNB3LqaqPiw/exec")
+            fetch("https://script.google.com/macros/s/AKfycbzDQChudcLCZQ4se9DmDX3KBVtQOHpGRbTUGKtoDofQ8CssXZi7YO8OTvfuLeH4N7XY/exec")
                 .then(response => response.json())
                 .then(data => {
                     let tbody = document.getElementById("prenotazioniLista");

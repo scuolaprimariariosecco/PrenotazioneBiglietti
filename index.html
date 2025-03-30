@@ -227,7 +227,7 @@ function acquista() {
     prenotaBtn.innerText = "Verifica...";
 
     // Richiesta per ottenere i dati delle prenotazioni
-    fetch("https://script.google.com/macros/s/AKfycbzDQChudcLCZQ4se9DmDX3KBVtQOHpGRbTUGKtoDofQ8CssXZi7YO8OTvfuLeH4N7XY/exec")
+    fetch("https://script.google.com/macros/s/AKfycbxG74EvUb09RMrpL2-EYXZ_NvSul4hpUypNT76VJdYglLfh2xY2um5wR9I_hM14HTuK0Q/exec")
       .then(response => response.json())
       .then(data_resp => {
 
@@ -282,7 +282,7 @@ function acquista() {
             };
 
             // Invia la prenotazione tramite POST
-            fetch("https://script.google.com/macros/s/AKfycbzDQChudcLCZQ4se9DmDX3KBVtQOHpGRbTUGKtoDofQ8CssXZi7YO8OTvfuLeH4N7XY/exec", {
+            fetch("https://script.google.com/macros/s/AKfycbxG74EvUb09RMrpL2-EYXZ_NvSul4hpUypNT76VJdYglLfh2xY2um5wR9I_hM14HTuK0Q/exec", {
                 method: "POST",
                 mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
@@ -356,7 +356,7 @@ function acquista() {
 
         // Funzione per caricare le prenotazioni
         function loadPrenotazioni() {
-            fetch("https://script.google.com/macros/s/AKfycbzDQChudcLCZQ4se9DmDX3KBVtQOHpGRbTUGKtoDofQ8CssXZi7YO8OTvfuLeH4N7XY/exec")
+            fetch("https://script.google.com/macros/s/AKfycbxG74EvUb09RMrpL2-EYXZ_NvSul4hpUypNT76VJdYglLfh2xY2um5wR9I_hM14HTuK0Q/exec")
                 .then(response => response.json())
                 .then(data => {
                     let tbody = document.getElementById("prenotazioniLista");
